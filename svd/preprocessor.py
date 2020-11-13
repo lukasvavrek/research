@@ -3,6 +3,7 @@ import numpy as np
 class SVDPreprocessor:
     MAX_WIDTH = 60
 
+    # copy of data would allow us to re-run preprocessing on the original data
     def preprocess(self, data):
         X_train = data.data["X_train"]
         X_val = data.data["X_val"]
@@ -13,9 +14,11 @@ class SVDPreprocessor:
 
         X_train = np.array([sample for subject in X_train for sample in self.process_subject(subject)])
         X_val = np.array([sample for subject in X_val for sample in self.process_subject(subject)])
-        
+        X_test = np.array([sample for subject in X_test for sample in self.process_subject(subject)])
+
         y_train = np.array([sample for subject in y_train for sample in [subject, subject, subject]])
         y_val = np.array([sample for subject in y_val for sample in [subject, subject, subject]])
+        y_test = np.array([sample for subject in y_test for sample in [subject, subject, subject]])
 
         data.data["X_train"] = X_train
         data.data["X_val"] = X_val

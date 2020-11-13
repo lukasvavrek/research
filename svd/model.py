@@ -20,10 +20,9 @@ class SVDModel:
         disable_training_layers(conv_base)
 
         flattened = layers.Flatten()(conv_base.output)
-        x = layers.Dense(16, activation='relu')(flattened)
-        x = layers.Dropout(rate=0.4)(x)
-        x = layers.Dense(8, activation='relu')(x)
-        x = layers.Dropout(rate=0.4)(x)
+        x = layers.Dense(32, activation='relu')(flattened)
+        x = layers.Dense(16, activation='relu')(x)
+        x = layers.Dropout(rate=0.5)(x)
         answer = layers.Dense(1, activation='sigmoid')(x) 
 
         model = models.Model(conv_base.input, answer)
