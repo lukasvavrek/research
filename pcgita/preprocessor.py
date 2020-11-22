@@ -1,24 +1,30 @@
 import numpy as np
 
 class PcGitaPreprocessor:
-    MAX_WIDTH = 60
+    MAX_WIDTH = 32
 
     def preprocess(self, data):
         X_train = data.data["X_train"]
         X_val = data.data["X_val"]
+        X_test = data.data["X_test"]
         y_train = data.data["y_train"]
         y_val = data.data["y_val"]
+        y_test = data.data["y_test"]
 
         X_train = np.array([sample for subject in X_train for sample in self.process_subject(subject)])
         X_val = np.array([sample for subject in X_val for sample in self.process_subject(subject)])
-        
+        X_test = np.array([sample for subject in X_test for sample in self.process_subject(subject)])
+
         y_train = np.array([sample for subject in y_train for sample in [subject, subject, subject]])
         y_val = np.array([sample for subject in y_val for sample in [subject, subject, subject]])
+        y_test = np.array([sample for subject in y_test for sample in [subject, subject, subject]])
 
         data.data["X_train"] = X_train
         data.data["X_val"] = X_val
+        data.data["X_test"] = X_test
         data.data["y_train"] = y_train
         data.data["y_val"] = y_val
+        data.data["y_test"] = y_test
 
     """alternative to cut_and_stack_samples"""
     def process_subject(self, subject, width=MAX_WIDTH):

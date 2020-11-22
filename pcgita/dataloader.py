@@ -5,7 +5,7 @@ import random
 from general.data import Data
 
 class PcGitaDataLoader:
-    MAX_WIDTH = 60
+    MAX_WIDTH = 32
     base_path = '../../k_fold_by_vowels/'
 
     def __init__(self, spectrogram_loader):
@@ -40,7 +40,7 @@ class PcGitaDataLoader:
         
         for subject_path in os.listdir(path):
             subject = self.load_subject(os.path.join(path, subject_path))
-            if not self.should_skip_subject(subject):
+            if self.should_skip_subject(subject) == False:
                 subjects.append(subject)
             
         return subjects 

@@ -24,6 +24,7 @@ class Trainer:
     # should we provide model_builder or model directly?
     def __init__(self, model_builder):
         self.model_builder = model_builder
+        self.model = None
 
     def fit_model(self, data, early_stop=False):
         self.model = self.model_builder.build_model()
@@ -48,7 +49,7 @@ class Trainer:
             mode='min')
 
         cbs = [mcp_save]
-        if early_stop:
+        if early_stop == True:
             cbs.append(early_stop)
 
         return self.model.fit(
@@ -61,12 +62,17 @@ class Trainer:
 
     # this is cheating a bit as model already saw val data
     # however, we want to have the ability to save the best model
-    def evaluate(self, data):
+    def evaluate(self, data, load_weights=True):
+        if self.model is None:
+            self.model = self.model_builder.build_model()
+
         # TODO: normalize
         X_test = data.data["X_test"]
         y_test = data.data["y_test"]
 
-        file_name = self.FILE_NAME_FORMAT.format(data.identifier)
-        self.model.load_weights(file_name)
+        # is there a usecase with `load_weights == False`?
+        if load_weights == True:
+            file_name = self.FILE_NAME_FORMAT.format(data.identifier)
+            self.model.load_weights(file_name)
 
         return self.model.evaluate(X_test, y_test)

@@ -1,7 +1,7 @@
 import numpy as np
 
 class SVDPreprocessor:
-    MAX_WIDTH = 60
+    MAX_WIDTH = 32
 
     # copy of data would allow us to re-run preprocessing on the original data
     def preprocess(self, data):

@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 from general.data import Data
 
 class SVDDataLoader:
-    MAX_WIDTH = 60
+    MAX_WIDTH = 32
     base_path = '../../SB-dataset/'
 
     def __init__(self, spectrogram_loader):
