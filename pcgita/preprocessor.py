@@ -19,6 +19,8 @@ class PcGitaPreprocessor:
         y_val = np.array([sample for subject in y_val for sample in [subject, subject, subject]])
         y_test = np.array([sample for subject in y_test for sample in [subject, subject, subject]])
 
+        X_train, X_val, X_test = self.normalize(X_train, X_val, X_test)
+
         data.data["X_train"] = X_train
         data.data["X_val"] = X_val
         data.data["X_test"] = X_test
@@ -39,6 +41,17 @@ class PcGitaPreprocessor:
             ], axis=2))
 
         return x
+
+    def normalize(self, xtr, xva, xte):
+        v = np.concatenate((xtr, xva), axis=0)
+        
+        v_min = v.min(axis=(0, 1), keepdims=True)
+        v_max = v.max(axis=(0, 1), keepdims=True)
+        xtr = (xtr - v_min)/(v_max - v_min)
+        xva = (xva - v_min)/(v_max - v_min)
+        xte = (xte - v_min)/(v_max - v_min)
+
+        return (xtr, xva, xte)
         
     def cut_and_stack_samples(self, subject, width=MAX_WIDTH):   
         return np.stack([

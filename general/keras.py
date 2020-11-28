@@ -16,7 +16,7 @@ def disable_training_layers(model):
 from tensorflow.keras import callbacks
 
 class Trainer:
-    EPOCHS = 100
+    EPOCHS = 50
     BATCH_SIZE = 20
     EARLY_STOP_PATIENCE = 10
     FILE_NAME_FORMAT = '../output/{}.mdl_wts.hdf5'
