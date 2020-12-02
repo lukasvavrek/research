@@ -1,7 +1,7 @@
 import numpy as np
 
 class PcGitaPreprocessor:
-    MAX_WIDTH = 32
+    MAX_WIDTH = 71
 
     def preprocess(self, data):
         X_train = data.data["X_train"]
@@ -11,15 +11,22 @@ class PcGitaPreprocessor:
         y_val = data.data["y_val"]
         y_test = data.data["y_test"]
 
-        X_train = np.array([sample for subject in X_train for sample in self.process_subject(subject)])
-        X_val = np.array([sample for subject in X_val for sample in self.process_subject(subject)])
-        X_test = np.array([sample for subject in X_test for sample in self.process_subject(subject)])
+        # X_train = np.array([sample for subject in X_train for sample in self.process_subject(subject)])
+        # X_val = np.array([sample for subject in X_val for sample in self.process_subject(subject)])
+        # X_test = np.array([sample for subject in X_test for sample in self.process_subject(subject)])
 
-        y_train = np.array([sample for subject in y_train for sample in [subject, subject, subject]])
-        y_val = np.array([sample for subject in y_val for sample in [subject, subject, subject]])
-        y_test = np.array([sample for subject in y_test for sample in [subject, subject, subject]])
+        # y_train = np.array([sample for subject in y_train for sample in [subject, subject, subject]])
+        # y_val = np.array([sample for subject in y_val for sample in [subject, subject, subject]])
+        # y_test = np.array([sample for subject in y_test for sample in [subject, subject, subject]])
 
-        X_train, X_val, X_test = self.normalize(X_train, X_val, X_test)
+        # X_train, X_val, X_test = self.normalize(X_train, X_val, X_test)
+
+        X_train = np.stack(X_train)
+        X_val = np.stack(X_val)
+        X_test = np.stack(X_test)
+        y_train = np.stack(y_train)
+        y_val = np.stack(y_val)
+        y_test = np.stack(y_test)
 
         data.data["X_train"] = X_train
         data.data["X_val"] = X_val

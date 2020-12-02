@@ -1,4 +1,4 @@
-from tensorflow.keras.applications import VGG16
+from tensorflow.keras.applications import VGG16, Xception
 from tensorflow.keras import layers
 from tensorflow.keras import models
 from tensorflow.keras import optimizers
@@ -6,9 +6,7 @@ from tensorflow.keras import optimizers
 from general.keras import disable_training_layers
 
 class PcGitaModel:
-    MAX_WIDTH = 32
-    # should we introduce constants or obtain this as a parameter?
-    N_MELS = 128  * 2
+    INPUT_SHAPE = (369, 496, 3)
 
     def __init__(self, model='vgg'):
         self.model = model
@@ -18,12 +16,14 @@ class PcGitaModel:
             model = self.build_cnn_model()
         elif self.model == 'vgg':
             model = self.build_vgg16_model()
+        elif self.model == 'xception':
+            model = self.build_xception_model()
         
         ### 1e-6 -> velmi zaujimave vysledky na 50 epochach
         model.compile(
-            #optimizer=optimizers.Adam(lr=0.0001), #lr= 1e-6 0.001
-            optimizer=optimizers.Adam(), #lr= 1e-6 0.001
-#           optimizer=optimizers.SGD(lr=0.1),
+            #optimizer=optimizers.Adam(), #lr= 1e-6 0.001
+            optimizer=optimizers.RMSprop(lr=2e-5), #lr= 1e-6 0.001
+#           optimizer=optimizers.SGD(),
             loss='binary_crossentropy',
             metrics=['accuracy'])
 
@@ -54,15 +54,33 @@ class PcGitaModel:
         conv_base = VGG16(
             weights='imagenet',
             include_top=False,
-            input_shape=(self.N_MELS, self.MAX_WIDTH, 3))
+            input_shape=self.INPUT_SHAPE)
 
         disable_training_layers(conv_base)
 
         flattened = layers.Flatten()(conv_base.output)
-        x = layers.Dense(16, activation='relu')(flattened)
+        #flattened = layers.GlobalAveragePooling2D(conv_base.output) # how to use it?
+        x = layers.Dense(256, activation='relu')(flattened)
+        x = layers.Dense(128, activation='relu')(x)
         x = layers.Dropout(rate=0.5)(x)
-        x = layers.Dense(16, activation='relu')(x)
+        x = layers.Dense(64, activation='relu', kernel_regularizer='l1')(x)
+        answer = layers.Dense(1, activation='sigmoid')(x) 
+
+        model = models.Model(conv_base.input, answer)
+        return model
+
+    def build_xception_model(self):
+        conv_base = Xception(
+            weights='imagenet',
+            include_top=False,
+            input_shape=self.INPUT_SHAPE)
+
+        disable_training_layers(conv_base)
+
+        flattened = layers.Flatten()(conv_base.output)
+        x = layers.Dense(128, activation='relu')(flattened)
         x = layers.Dropout(rate=0.5)(x)
+        x = layers.Dense(64, activation='relu')(x)
         answer = layers.Dense(1, activation='sigmoid')(x) 
 
         model = models.Model(conv_base.input, answer)

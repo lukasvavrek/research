@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import librosa
+import librosa.display
 
 def visualize_history(fig, axs, i, history):
     history_dict = history.history
@@ -39,3 +41,8 @@ def visualize_history(fig, axs, i, history):
     #axs[1].xlabel('Epochs')
     #axs[1].ylabel('Accuracy')
     axs[1].legend()
+
+def visualize_spectrogram(S, sr, hop_length, show_colorbar=True):
+    librosa.display.specshow(S, sr=sr, hop_length=hop_length, x_axis='time', y_axis='mel')
+    if show_colorbar:
+        plt.colorbar(format='%+2.0f dB')
