@@ -4,3 +4,8 @@
 .vscode/
 **/.ipynb_checkpoints/*
 output/
+
+data/**
+**/data/**
+**/model.pth
+**/runs/**
