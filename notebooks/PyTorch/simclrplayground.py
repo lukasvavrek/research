@@ -48,6 +48,23 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from pcgita.dataset import PcGitaTorchDataset
 from librispeech.dataset import LibrispeechSpectrogramDataset
 
+def visualize_spectrograms():
+    logger = TensorBoardLogger('runs', name='SimCLR_libri_speech')
+
+    td = LibrispeechSpectrogramDataset(transform=None, train=True)
+
+    toTensor = transforms.ToTensor()
+    samples = []
+    for i in range(0, 24):
+        img, cls = td.__getitem__(i)
+        img = toTensor(img)
+        samples.append(img)
+
+    grid = torchvision.utils.make_grid(samples, padding=10, nrow=4)
+
+    logger.experiment.add_image("generated_images", grid, 0)
+    logger.finalize("success")
+
 def train_self_supervised():
     logger = TensorBoardLogger('runs', name='SimCLR_libri_speech')
 
@@ -64,24 +81,6 @@ def train_self_supervised():
     test_loader = DataLoader(val_dataset, batch_size=batch_size, num_workers=num_workers)
 
     model = SimCLR(gpus=1, num_samples=len(train_dataset), batch_size=batch_size, dataset='librispeech')
-
-    ##
-    
-    td = LibrispeechSpectrogramDataset(transform=None, train=True)
-    samples = []
-    toTensor = transforms.ToTensor()
-    for i in range(0, 24):
-        img, cls = td.__getitem__(i)
-        img = toTensor(img)
-        samples.append(img)
-
-    grid = torchvision.utils.make_grid(samples, padding=10, nrow=4)
-    logger.experiment.add_image("generated_images", grid, 0)
-    logger.finalize("success")
-
-    return
-
-    ##
 
     checkpoint_callback = ModelCheckpoint(
         monitor="val_loss",
@@ -203,7 +202,8 @@ class ImagenetTransferLearning(LightningModule):
 # predictions = model(x)
 
 if __name__ == '__main__':
-    train_self_supervised()
+    visualize_spectrograms()
+    # train_self_supervised()
     # train_transfer_learning()
 
     exit()
