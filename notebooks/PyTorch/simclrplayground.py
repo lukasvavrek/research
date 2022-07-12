@@ -65,6 +65,23 @@ def visualize_spectrograms():
     logger.experiment.add_image("generated_images", grid, 0)
     logger.finalize("success")
 
+def visualize_spectrograms_pcgita():
+    logger = TensorBoardLogger('runs', name='pc-gita')
+
+    td = PcGitaTorchDataset(transform=None, train=True)
+
+    toTensor = transforms.ToTensor()
+    samples = []
+    for i in range(0, 24):
+        img, cls = td.__getitem__(i)
+        img = toTensor(img)
+        samples.append(img)
+
+    grid = torchvision.utils.make_grid(samples, padding=10, nrow=4)
+
+    logger.experiment.add_image("generated_images", grid, 0)
+    logger.finalize("success")
+
 def train_self_supervised():
     logger = TensorBoardLogger('runs', name='SimCLR_libri_speech')
 
@@ -114,13 +131,11 @@ def train_transfer_learning():
         monitor="val_loss",
         dirpath=r'D:\Users\lVavrek\research\data',
         filename="transfer-learning-pcgita-{epoch:02d}-{val_loss:.2f}",
-        save_top_k=1,
+        save_top_k=3,
         mode="min",
     )
 
-    # early_stopping = EarlyStopping(monitor="val_loss")
-
-    trainer = Trainer(gpus=1, callbacks=[checkpoint_callback], logger=logger, max_epochs=20)
+    trainer = Trainer(gpus=1, callbacks=[checkpoint_callback], logger=logger, max_epochs=30)
     trainer.fit(model, train_loader, test_loader)
 
     # val_dataset = LibrispeechSpectrogramDataset(transform=SimCLREvalDataTransform(input_height=224, gaussian_blur=False), train=False)
@@ -133,15 +148,54 @@ def train_transfer_learning():
     # print(out)
     # print(net.feature_extractor.eval())
 
+# new 3.4.
+def extract_data_from_pretrained_model():
+    logger = TensorBoardLogger('runs', name='pc-gita')
+
+    batch_size = 32
+    input_height = 224
+    num_workers = 4
+
+    train_dataset = PcGitaTorchDataset(transform=SimCLRTrainDataTransform(input_height=input_height, gaussian_blur=False), train=True)
+    val_dataset = PcGitaTorchDataset(transform=SimCLRTrainDataTransform(input_height=input_height, gaussian_blur=False), train=False)
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, num_workers=num_workers)
+    test_loader = DataLoader(val_dataset, batch_size=batch_size, num_workers=num_workers)
+
+    print('train_dataset: {}'.format(len(train_dataset)))
+    print('val_dataset: {}'.format(len(val_dataset)))
+
+    model = ImagenetTransferLearning(extract_features=True)
+
+    for step, (x, y) in enumerate(train_loader):
+        print('step {}'.format(step))
+        print('[x] type: {} len: {}'.format(type(x), len(x)))
+        print('[x0] type: {} size: {}'.format(type(x[0]), x[0].size()))
+        print('[x1] type: {} size: {}'.format(type(x[1]), x[1].size()))
+        print('[x2] type: {} size: {}'.format(type(x[2]), x[2].size()))
+        print('[y] type: {} size: {}'.format(type(y), y.size()))
+
+        y_pred = model(x)
+        print('y_pred type: {} size: {}'.format(type(y_pred), y_pred.size()))
+
+        y_np = y.detach().cpu().numpy()
+        print('[y_np] type: {} size: {}'.format(type(y_np), y_np.shape()))
+
+        y_pred_np = y_pred.detach().cpu().numpy()
+        print('y_pred_np type: {} shape: {}'.format(type(y_pred_np), y_pred_np.shape))
+
+
 class ImagenetTransferLearning(LightningModule):
     # network input
     # Conv2d(3, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
     
-    def __init__(self):
+    def __init__(self, extract_features = False):
         super().__init__()
 
+        self.extract_features = extract_features
+
         # init a pretrained resnet
-        weight_path = r'D:\Users\lVavrek\research\data\sim-clr-backups\01112021-self-supervised-librispeech-epoch=19-val_loss=1.52.ckpt'
+        weight_path = r'D:\Users\lVavrek\research\data\sim-clr-backups\06122021-self-supervised-librispeech-epoch=34-val_loss=1.21.ckpt'
         simclr = SimCLR.load_from_checkpoint(weight_path, strict=False)
         backbone = simclr.encoder
 
@@ -162,6 +216,10 @@ class ImagenetTransferLearning(LightningModule):
         with torch.no_grad():
             x = x[0] # hack, because we use SimCLR transform which returns 3 augmented images; use custom tranform instead
             representations = self.feature_extractor(x).flatten(1)
+
+        if self.extract_features == True:
+            return representations
+
         x = self.classifier(representations)
         x = self.sigmoid(x)
         return x
@@ -202,9 +260,11 @@ class ImagenetTransferLearning(LightningModule):
 # predictions = model(x)
 
 if __name__ == '__main__':
-    visualize_spectrograms()
+    # visualize_spectrograms()
+    # visualize_spectrograms_pcgita()
     # train_self_supervised()
-    # train_transfer_learning()
+    #train_transfer_learning()
+    extract_data_from_pretrained_model()
 
     exit()
     d1 = LibrispeechSpectrogramDataset(transform=SimCLRTrainDataTransform(input_height=224, gaussian_blur=False), train=True)
