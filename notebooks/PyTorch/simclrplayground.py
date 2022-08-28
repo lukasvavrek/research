@@ -15,7 +15,7 @@ import torch
 from torch.nn import functional as F
 from pytorch_lightning.metrics import functional as FM
 from torch.optim import Adam
-from torchaudio.transforms import Spectrogram, AmplitudeToDB # try using mel spectrogram as well
+from torchaudio.transforms import Spectrogram, AmplitudeToDB  # try using mel spectrogram as well
 from pl_bolts.models.self_supervised import SimCLR
 from pl_bolts.models.self_supervised.simclr import SimCLREvalDataTransform, SimCLRTrainDataTransform
 from pytorch_lightning.trainer import Trainer
@@ -48,6 +48,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from pcgita.dataset import PcGitaTorchDataset
 from librispeech.dataset import LibrispeechSpectrogramDataset
 
+
 def visualize_spectrograms():
     logger = TensorBoardLogger('runs', name='SimCLR_libri_speech')
 
@@ -64,6 +65,7 @@ def visualize_spectrograms():
 
     logger.experiment.add_image("generated_images", grid, 0)
     logger.finalize("success")
+
 
 def visualize_spectrograms_pcgita():
     logger = TensorBoardLogger('runs', name='pc-gita')
@@ -82,6 +84,7 @@ def visualize_spectrograms_pcgita():
     logger.experiment.add_image("generated_images", grid, 0)
     logger.finalize("success")
 
+
 def train_self_supervised():
     logger = TensorBoardLogger('runs', name='SimCLR_libri_speech')
 
@@ -91,8 +94,10 @@ def train_self_supervised():
     input_height = 224
     num_workers = 4
 
-    train_dataset = LibrispeechSpectrogramDataset(transform=SimCLRTrainDataTransform(input_height=input_height, gaussian_blur=False), train=True)
-    val_dataset = LibrispeechSpectrogramDataset(transform=SimCLREvalDataTransform(input_height=input_height, gaussian_blur=False), train=False)
+    train_dataset = LibrispeechSpectrogramDataset(
+        transform=SimCLRTrainDataTransform(input_height=input_height, gaussian_blur=False), train=True)
+    val_dataset = LibrispeechSpectrogramDataset(
+        transform=SimCLREvalDataTransform(input_height=input_height, gaussian_blur=False), train=False)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, num_workers=num_workers)
     test_loader = DataLoader(val_dataset, batch_size=batch_size, num_workers=num_workers)
@@ -112,6 +117,7 @@ def train_self_supervised():
     trainer = Trainer(gpus=1, callbacks=[checkpoint_callback, early_stopping], logger=logger)
     trainer.fit(model, train_loader, test_loader)
 
+
 def train_transfer_learning():
     logger = TensorBoardLogger('runs', name='pc-gita')
 
@@ -119,8 +125,10 @@ def train_transfer_learning():
     input_height = 224
     num_workers = 4
 
-    train_dataset = PcGitaTorchDataset(transform=SimCLRTrainDataTransform(input_height=input_height, gaussian_blur=False), train=True)
-    val_dataset = PcGitaTorchDataset(transform=SimCLRTrainDataTransform(input_height=input_height, gaussian_blur=False), train=False)
+    train_dataset = PcGitaTorchDataset(
+        transform=SimCLRTrainDataTransform(input_height=input_height, gaussian_blur=False), train=True)
+    val_dataset = PcGitaTorchDataset(transform=SimCLRTrainDataTransform(input_height=input_height, gaussian_blur=False),
+                                     train=False)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, num_workers=num_workers)
     test_loader = DataLoader(val_dataset, batch_size=batch_size, num_workers=num_workers)
@@ -148,6 +156,7 @@ def train_transfer_learning():
     # print(out)
     # print(net.feature_extractor.eval())
 
+
 # new 3.4.
 def extract_data_from_pretrained_model():
     logger = TensorBoardLogger('runs', name='pc-gita')
@@ -156,8 +165,10 @@ def extract_data_from_pretrained_model():
     input_height = 224
     num_workers = 4
 
-    train_dataset = PcGitaTorchDataset(transform=SimCLRTrainDataTransform(input_height=input_height, gaussian_blur=False), train=True)
-    val_dataset = PcGitaTorchDataset(transform=SimCLRTrainDataTransform(input_height=input_height, gaussian_blur=False), train=False)
+    train_dataset = PcGitaTorchDataset(
+        transform=SimCLRTrainDataTransform(input_height=input_height, gaussian_blur=False), train=True)
+    val_dataset = PcGitaTorchDataset(transform=SimCLRTrainDataTransform(input_height=input_height, gaussian_blur=False),
+                                     train=False)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, num_workers=num_workers)
     test_loader = DataLoader(val_dataset, batch_size=batch_size, num_workers=num_workers)
@@ -188,8 +199,8 @@ def extract_data_from_pretrained_model():
 class ImagenetTransferLearning(LightningModule):
     # network input
     # Conv2d(3, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
-    
-    def __init__(self, extract_features = False):
+
+    def __init__(self, extract_features=False):
         super().__init__()
 
         self.extract_features = extract_features
@@ -214,7 +225,8 @@ class ImagenetTransferLearning(LightningModule):
     def forward(self, x):
         # self.feature_extractor.eval() # this freezes the layers
         with torch.no_grad():
-            x = x[0] # hack, because we use SimCLR transform which returns 3 augmented images; use custom tranform instead
+            x = x[
+                0]  # hack, because we use SimCLR transform which returns 3 augmented images; use custom tranform instead
             representations = self.feature_extractor(x).flatten(1)
 
         if self.extract_features == True:
@@ -227,8 +239,8 @@ class ImagenetTransferLearning(LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         logits = self(x)
-        loss = self.celoss(logits, y) #F.nll_loss(logits, y)
-        self.log("loss", loss)  
+        loss = self.celoss(logits, y)  # F.nll_loss(logits, y)
+        self.log("loss", loss)
         return loss
 
     # https://pytorch-lightning.readthedocs.io/en/stable/common/lightning_module.html
@@ -246,7 +258,8 @@ class ImagenetTransferLearning(LightningModule):
         return loss, acc
 
     def configure_optimizers(self):
-        return Adam(self.parameters(), lr=0.0001) # , lr=0.001
+        return Adam(self.parameters(), lr=0.0001)  # , lr=0.001
+
 
 # fine-tune
 # model = ImagenetTransferLearning()
@@ -260,14 +273,15 @@ class ImagenetTransferLearning(LightningModule):
 # predictions = model(x)
 
 if __name__ == '__main__':
-    # visualize_spectrograms()
+    visualize_spectrograms()
     # visualize_spectrograms_pcgita()
     # train_self_supervised()
-    #train_transfer_learning()
-    extract_data_from_pretrained_model()
+    # train_transfer_learning()
+    # extract_data_from_pretrained_model()
 
     exit()
-    d1 = LibrispeechSpectrogramDataset(transform=SimCLRTrainDataTransform(input_height=224, gaussian_blur=False), train=True)
+    d1 = LibrispeechSpectrogramDataset(transform=SimCLRTrainDataTransform(input_height=224, gaussian_blur=False),
+                                       train=True)
     d2 = PcGitaTorchDataset(transform=SimCLRTrainDataTransform(input_height=224, gaussian_blur=False), train=True)
     dl1 = DataLoader(d1, batch_size=16, num_workers=4)
     dl2 = DataLoader(d2, batch_size=16, num_workers=4)
@@ -301,7 +315,7 @@ if __name__ == '__main__':
     test_loader = DataLoader(d2, batch_size=16, num_workers=4)
 
     net = ImagenetTransferLearning()
-    x = next(iter(test_loader))[0][0][:1] # single sample, drop the label; TODO: check what is returned by data loader
+    x = next(iter(test_loader))[0][0][:1]  # single sample, drop the label; TODO: check what is returned by data loader
     out = net(x)
     print(out)
     print('the end')
