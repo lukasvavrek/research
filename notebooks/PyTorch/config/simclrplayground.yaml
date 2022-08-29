@@ -1,0 +1,26 @@
+
+paths:
+  data: ${hydra:runtime.cwd}/../../data/
+
+params:
+  run_visualizations: False
+  run_simclr: False
+  run_data_extraction: False
+  run_transfer_learning: False
+# accelerator: gpu # for Helios
+  accelerator: mps # for MacBook air
+
+# 8, 224, 8 worked well
+# 16, 224, 4 as well
+simclr:
+  batch_size: 16
+  input_height: 224
+  num_workers: 4
+  dataset: librispeech
+
+tl_simclr:
+  batch_size: 32
+  input_height: 224
+  num_workers: 4
+  dataset: pc-gita
+  max_epochs: 30

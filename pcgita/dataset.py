@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Any, Tuple
+from typing import Tuple
 
 import torch
 import torchaudio
@@ -11,10 +11,18 @@ from general.torch.spectrogram import get_spectrogram
 from PIL.Image import Image
 
 class PcGitaTorchDataset(Dataset):
-    base_path = 'D:/Users/lVavrek/research/data/pcgita/original/'
-    output_path = 'D:/Users/lVavrek/research/data/pcgita/processed/'
+    root = 'D:/Users/lVavrek/research/data/'  # only applicable for Helios
 
-    def __init__(self, transform=None, train=True):
+    base_path: str
+    output_path: str
+
+    def __init__(self, transform=None, train=True, root=None):
+        if root is not None:
+            root = root
+
+        self.base_path = os.path.join(root, 'pcgita', 'original')
+        self.output_path = os.path.join(root, 'pcgita', 'processed')
+
         self.transform = transform
         self.train = train
 

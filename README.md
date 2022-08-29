@@ -26,3 +26,12 @@ source env/bin/activate
 pip install -r requirements.txt
 ```
 
+## Visualizations
+
+For PyTorch, Tensorboard is the visualization tool of choice. To run the server
+use:
+```
+tensorboard --logdir {dir}
+```
+and point it to a correct directory.
+
