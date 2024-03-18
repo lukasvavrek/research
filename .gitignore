@@ -9,3 +9,6 @@ data/**
 **/data/**
 **/model.pth
 **/runs/**
+**/outputs/**
+.DS_Store
+.idea/
